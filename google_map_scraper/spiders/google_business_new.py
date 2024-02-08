@@ -16,11 +16,11 @@ class GoogleSpider(scrapy.Spider):
     name = 'google_business_new'
     custom_settings = {
         'ROBOTSTXT_OBEY': False,
-        'ZYTE_SMARTPROXY_ENABLED': False,
+        'ZYTE_SMARTPROXY_ENABLED': True,
         'ZYTE_SMARTPROXY_URL': 'api.zyte.com:8011',
         'ZYTE_SMARTPROXY_APIKEY': 'bf34ea057aa340bfaf06eb0ecb05cc34',
-        'CONCURRENT_REQUESTS': 64,
-        'CONCURRENT_REQUESTS_PER_DOMAIN': 64,
+        'CONCURRENT_REQUESTS': 32,
+        'CONCURRENT_REQUESTS_PER_DOMAIN': 32,
         'AUTOTHROTTLE_ENABLED': False,
         'DOWNLOAD_TIMEOUT': 600,
         'DOWNLOADER_MIDDLEWARES': {
@@ -87,17 +87,22 @@ class GoogleSpider(scrapy.Spider):
         wb_obj = openpyxl.load_workbook("input/test_zipcode.xlsx")
         sheet_obj = wb_obj['USA ALL']
         columns = ['Zip Code', 'City', 'County', 'Population', 'State']
-        for row in range(2, sheet_obj.max_row + 1):
-            row_data = {}
-            for col, col_name in enumerate(columns, start=1):
-                cell_value = sheet_obj.cell(row=row, column=col).value
-                row_data[col_name] = cell_value
-            self.locations.append(row_data)
+        # for row in range(2, sheet_obj.max_row + 1):
+        #     row_data = {}
+        #     for col, col_name in enumerate(columns, start=1):
+        #         cell_value = sheet_obj.cell(row=row, column=col).value
+        #         row_data[col_name] = cell_value
+        #     self.locations.append(row_data)
+        self.locations.append({
+            'Zip Code': '48207',
+            'City': 'Detroit',
+        })
 
     def parse(self, response, *args):
+        print(self.locations, self.keywords)
         for location in self.locations[:]:
             for keyword in self.keywords[:]:
-                search_keyword = '{} in {} USA'.format(keyword['Keywords'], location['City'])
+                search_keyword = '{} in {} USA'.format(keyword['Keywords'], location['Zip Code'])
                 query = self.search_keyword.format(keyword=search_keyword)
                 url = self.new_listings_url_t.format(q=quote_plus(query), page=0)
                 meta = {'keyword': search_keyword, 'start': 0, 'query': query}
