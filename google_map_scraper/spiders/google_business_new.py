@@ -81,7 +81,7 @@ class GoogleSpider(scrapy.Spider):
 
     def __init__(self):
         super(GoogleSpider, self).__init__()
-        with open("input/input_keywords.csv", mode='r') as f:
+        with open("input/test_keyword.csv", mode='r') as f:
             self.keywords = list(csv.DictReader(f))
 
         wb_obj = openpyxl.load_workbook("input/test_zipcode.xlsx")
@@ -94,15 +94,15 @@ class GoogleSpider(scrapy.Spider):
         #         row_data[col_name] = cell_value
         #     self.locations.append(row_data)
         self.locations.append({
-            'Zip Code': '48207',
-            'City': 'Detroit',
+            'Zip Code': '-',
+            'City': 'Maryland',
         })
 
     def parse(self, response, *args):
         print(self.locations, self.keywords)
         for location in self.locations[:]:
             for keyword in self.keywords[:]:
-                search_keyword = '{} in {} USA'.format(keyword['Keywords'], location['Zip Code'])
+                search_keyword = '{} {}'.format(keyword['Keywords'], location['City'])
                 query = self.search_keyword.format(keyword=search_keyword)
                 url = self.new_listings_url_t.format(q=quote_plus(query), page=0)
                 meta = {'keyword': search_keyword, 'start': 0, 'query': query}
