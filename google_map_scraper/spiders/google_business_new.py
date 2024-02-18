@@ -161,7 +161,7 @@ class GoogleSpider(scrapy.Spider):
         #     self.locations.append(row_data)
         self.locations.append({
             'Zip Code': '-',
-            'City': 'Maryland',
+            'City': 'Rhode Island',
         })
 
     def start_requests(self):
