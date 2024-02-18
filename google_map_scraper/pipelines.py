@@ -35,7 +35,7 @@ class GoogleScraperPipeline:
             print("Table exists")
         else:
             self.cursor.execute(
-                '''CREATE TABLE google_maps_data (Bussiness_Name TEXT, Bussiness_Contact TEXT, 
+                '''CREATE TABLE google_maps_data (Keyword TEXT, Bussiness_Name TEXT, Bussiness_Contact TEXT, 
                 Business_URL TEXT, Bussiness_Website TEXT, Bussiness_Service TEXT,Bussiness_Serving_Area TEXT,Address TEXT,
                 Industry TEXT,Street TEXT,State TEXT,Zipcode TEXT,City TEXT, Country TEXT,Description TEXT,Review_Type TEXT,
                 Google_Map_Link TEXT, Opening_Hours TEXT, About TEXT,Images TEXT,Lat TEXT,Lon TEXT);''')
@@ -55,11 +55,12 @@ class GoogleScraperPipeline:
             check_query = f"SELECT Business_URL FROM google_maps_data WHERE CAST(Business_URL AS VARCHAR(MAX)) = '{item['Business_URL']}'"
             self.cursor.execute(check_query)
             if not self.cursor.fetchone():
-                insert_query = """INSERT INTO google_maps_data (Bussiness_Name, Bussiness_Contact, Business_URL,
+                insert_query = """INSERT INTO google_maps_data (Keyword, Bussiness_Name, Bussiness_Contact, Business_URL,
                 Bussiness_Website, Bussiness_Service, Bussiness_Serving_Area, Address, Industry, Street, State, Zipcode, City, Country,
                 Description, Review_Type, Google_Map_Link, Opening_Hours, About, Images, Lat, Lon)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
                 values = [
+                    item.get('Keyword', ''),
                     item.get('Bussiness_Name', ''),
                     item.get('Bussiness_Contact', ''),
                     item.get('Business_URL', ''),
@@ -85,7 +86,8 @@ class GoogleScraperPipeline:
                 logging.info(f"Inserted {item['Bussiness_Name']} into the database")
                 
             else:
-                print('Already exist!')
+                logging.info(f"already exists {item['Bussiness_Name']}")
+    
             check_business_query = f"SELECT Business_URL FROM business_table WHERE CAST(Business_URL AS VARCHAR(MAX)) = '{item['Business_URL']}'"
             self.cursor.execute(check_business_query)
             if not self.cursor.fetchone():
@@ -108,11 +110,9 @@ class GoogleScraperPipeline:
                         cl_z
                     ]
                     self.cursor.execute(business_insert_query, business_values)
-                    logger.info(f"Inserted {item['Bussiness_Name']} business hours into the database")
             else:
-                print("Already exist!")
+                pass
             
-        
             self.conn.commit()
         except:
             logger.error(f"Error inserting {item['Bussiness_Name']} into the database")
