@@ -12,6 +12,8 @@ import random
 
 logger = logging.getLogger(__name__)
 
+shard = 1
+
 
 class GoogleSpider(scrapy.Spider):
     name = "google_business_new"
@@ -147,7 +149,7 @@ class GoogleSpider(scrapy.Spider):
 
     def __init__(self):
         super(GoogleSpider, self).__init__()
-        with open("input/input_keywords.csv", mode="r") as f:
+        with open(f"input/keyword_{shard}.csv", mode="r") as f:
             self.keywords = list(csv.DictReader(f))
 
         wb_obj = openpyxl.load_workbook("input/test_zipcode.xlsx")
