@@ -448,7 +448,7 @@ class GoogleSpider(scrapy.Spider):
             cb_kwargs={"item": item},
         )
 
-    def image(self, response):
+    def image(self, response, item):
         item = response.meta.get("item")
         data = str(response.body)
         pattern = r"https://lh5\.googleusercontent\.com/p.*?(?=\\\\)"
@@ -478,7 +478,7 @@ class GoogleSpider(scrapy.Spider):
                 item.pop("Google_Map_Link")
                 yield item
 
-    def lon_lat(self, response):
+    def lon_lat(self, response, item):
         item = response.meta.get("item")
         values = (
             response.xpath("//script/text()")
