@@ -124,7 +124,7 @@ class GoogleScraperPipeline:
                 str(item.get("Lon", "")),
         ]
         try:
-            # self.df.loc[len(self.df)] = values
+            self.df.loc[len(self.df)] = values
             logging.info(f"Inserted {item['Bussiness_Name']} into the database")
 
             # else:

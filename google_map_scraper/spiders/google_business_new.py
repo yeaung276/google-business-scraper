@@ -24,7 +24,7 @@ class GoogleSpider(scrapy.Spider):
         'ZYTE_SMARTPROXY_APIKEY': 'bf34ea057aa340bfaf06eb0ecb05cc34',
         'CONCURRENT_REQUESTS': 16,
         'CONCURRENT_REQUESTS_PER_DOMAIN': 16,
-        'CONCURRENT_ITEMS': 32,
+        'CONCURRENT_ITEMS': 64,
         'AUTOTHROTTLE_ENABLED': True,
         'DOWNLOAD_TIMEOUT': 600,
         'DOWNLOADER_MIDDLEWARES': {
@@ -294,8 +294,8 @@ class GoogleSpider(scrapy.Spider):
                 url=url,
                 callback=self.parse,
                 meta=meta,
-                headers=self.headers,
-                errback=self.skip_request,
+                headers=self.headers
+                # errback=self.skip_request,
             )
 
     def skip_request(self, response):
@@ -307,6 +307,9 @@ class GoogleSpider(scrapy.Spider):
         meta = {**response.meta, "keyword": keyword, "start": start, "query": query}
         logger.info(f"Skip a page: {url}")
         yield Request(url=url, callback=self.parse, meta=meta, headers=self.headers)
+        
+    def error(self, failure):
+        return failure.request.cb_kwargs.get('item', {})
 
     def parse_new_details(self, response):
         item = dict()
@@ -441,6 +444,8 @@ class GoogleSpider(scrapy.Spider):
             method="POST",
             callback=self.image,
             meta={"item": item, 'dont_retry': True},
+            errback=self.error,
+            cb_kwargs={"item": item},
         )
 
     def image(self, response):
@@ -463,6 +468,8 @@ class GoogleSpider(scrapy.Spider):
                         headers=self.headers,
                         callback=self.lon_lat,
                         meta={"item": item, 'dont_retry': True},
+                        errback=self.error,
+                        cb_kwargs={"item": item},
                     )
                 else:
                     item.pop("Google_Map_Link")
