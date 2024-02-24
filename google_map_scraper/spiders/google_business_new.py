@@ -440,7 +440,7 @@ class GoogleSpider(scrapy.Spider):
             body=data,
             method="POST",
             callback=self.image,
-            meta={"item": item},
+            meta={"item": item, 'dont_retry': True},
         )
 
     def image(self, response):
@@ -462,7 +462,7 @@ class GoogleSpider(scrapy.Spider):
                         url=item["Google_Map_Link"],
                         headers=self.headers,
                         callback=self.lon_lat,
-                        meta={"item": item},
+                        meta={"item": item, 'dont_retry': True},
                     )
                 else:
                     item.pop("Google_Map_Link")
