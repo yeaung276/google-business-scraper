@@ -12,7 +12,7 @@ import random
 
 logger = logging.getLogger(__name__)
 
-shard = 1
+shard = 'test'
 
 
 class GoogleSpider(scrapy.Spider):
@@ -22,9 +22,10 @@ class GoogleSpider(scrapy.Spider):
         'ZYTE_SMARTPROXY_ENABLED': True,
         'ZYTE_SMARTPROXY_URL': 'api.zyte.com:8011',
         'ZYTE_SMARTPROXY_APIKEY': 'bf34ea057aa340bfaf06eb0ecb05cc34',
-        'CONCURRENT_REQUESTS': 32,
-        'CONCURRENT_REQUESTS_PER_DOMAIN': 32,
-        'AUTOTHROTTLE_ENABLED': False,
+        'CONCURRENT_REQUESTS': 16,
+        'CONCURRENT_REQUESTS_PER_DOMAIN': 16,
+        'CONCURRENT_ITEMS': 32,
+        'AUTOTHROTTLE_ENABLED': True,
         'DOWNLOAD_TIMEOUT': 600,
         'DOWNLOADER_MIDDLEWARES': {
             'scrapy_zyte_smartproxy.ZyteSmartProxyMiddleware': 610
@@ -265,7 +266,7 @@ class GoogleSpider(scrapy.Spider):
                 yield scrapy.Request(
                     url=details_url,
                     callback=self.parse_new_details,
-                    meta=response.meta,
+                    meta={**response.meta, 'dont_retry': True},
                     headers=self.headers,
                 )
             else:

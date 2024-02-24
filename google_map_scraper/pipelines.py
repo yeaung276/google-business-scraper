@@ -61,67 +61,67 @@ class GoogleScraperPipeline:
 
     def process_item(self, item, spider):
         try:
-            check_query = f"SELECT Business_URL FROM google_maps_data_s{shard} WHERE CAST(Business_URL AS VARCHAR(MAX)) = '{item['Business_URL']}'"
-            self.cursor.execute(check_query)
-            if not self.cursor.fetchone():
-                insert_query = f"""INSERT INTO google_maps_data_s{shard} (Keyword, Bussiness_Name, Bussiness_Contact, Business_URL,
-                Bussiness_Website, Bussiness_Service, Bussiness_Serving_Area, Address, Industry, Street, State, Zipcode, City, Country,
-                Description, Review_Type, Google_Map_Link, Opening_Hours, About, Images, Lat, Lon)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-                values = [
-                    item.get("Keyword", ""),
-                    item.get("Bussiness_Name", ""),
-                    item.get("Bussiness_Contact", ""),
-                    item.get("Business_URL", ""),
-                    item.get("Bussiness_Website", ""),
-                    item.get("Bussiness_Service", ""),
-                    item.get("Bussiness_Serving_Area", ""),
-                    item.get("Address", ""),
-                    item.get("Industry", ""),
-                    item.get("Street", ""),
-                    item.get("State", ""),
-                    item.get("Zipcode", ""),
-                    item.get("City", ""),
-                    item.get("Country", ""),
-                    item.get("Description", ""),
-                    item.get("Review_Type", ""),
-                    item.get("Google_Map_Link", ""),
-                    item.get("Opening Hours", ""),
-                    item.get("About", ""),
-                    item.get("Images", ""),
-                    str(item.get("Lat", "")),
-                    str(item.get("Lon", "")),
-                ]
-                self.cursor.execute(insert_query, values)
-                logging.info(f"Inserted {item['Bussiness_Name']} into the database")
+            # check_query = f"SELECT Business_URL FROM google_maps_data_s{shard} WHERE CAST(Business_URL AS VARCHAR(MAX)) = '{item['Business_URL']}'"
+            # self.cursor.execute(check_query)
+            # if not self.cursor.fetchone():
+            insert_query = f"""INSERT INTO google_maps_data_s{shard} (Keyword, Bussiness_Name, Bussiness_Contact, Business_URL,
+            Bussiness_Website, Bussiness_Service, Bussiness_Serving_Area, Address, Industry, Street, State, Zipcode, City, Country,
+            Description, Review_Type, Google_Map_Link, Opening_Hours, About, Images, Lat, Lon)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+            values = [
+                item.get("Keyword", ""),
+                item.get("Bussiness_Name", ""),
+                item.get("Bussiness_Contact", ""),
+                item.get("Business_URL", ""),
+                item.get("Bussiness_Website", ""),
+                item.get("Bussiness_Service", ""),
+                item.get("Bussiness_Serving_Area", ""),
+                item.get("Address", ""),
+                item.get("Industry", ""),
+                item.get("Street", ""),
+                item.get("State", ""),
+                item.get("Zipcode", ""),
+                item.get("City", ""),
+                item.get("Country", ""),
+                item.get("Description", ""),
+                item.get("Review_Type", ""),
+                item.get("Google_Map_Link", ""),
+                item.get("Opening Hours", ""),
+                item.get("About", ""),
+                item.get("Images", ""),
+                str(item.get("Lat", "")),
+                str(item.get("Lon", "")),
+            ]
+            self.cursor.execute(insert_query, values)
+            logging.info(f"Inserted {item['Bussiness_Name']} into the database")
 
-            else:
-                logging.info(f"already exists {item['Bussiness_Name']}")
+            # else:
+            #     logging.info(f"already exists {item['Bussiness_Name']}")
 
-            check_business_query = f"SELECT Business_URL FROM business_table_s{shard} WHERE CAST(Business_URL AS VARCHAR(MAX)) = '{item['Business_URL']}'"
-            self.cursor.execute(check_business_query)
-            if not self.cursor.fetchone():
-                business_insert_query = f"""INSERT INTO business_table_s{shard} (Bussiness_Name, Business_URL, Weekday, OpenH, OpenM,
-                OpenAMPM, CloseH, CloseM, CloseAMPM) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-                for weekday, hrs in item.get("Business_Hours", {}).items():
-                    split_hrs = hrs.split("–")
-                    op, cl = split_hrs if len(split_hrs) == 2 else ["", ""]
-                    op_h, op_m, op_z = split_time(op)
-                    cl_h, cl_m, cl_z = split_time(cl)
-                    business_values = [
-                        item.get("Bussiness_Name", ""),
-                        item.get("Business_URL", ""),
-                        weekday,
-                        op_h,
-                        op_m,
-                        op_z,
-                        cl_h,
-                        cl_m,
-                        cl_z,
-                    ]
-                    self.cursor.execute(business_insert_query, business_values)
-            else:
-                pass
+            # check_business_query = f"SELECT Business_URL FROM business_table_s{shard} WHERE CAST(Business_URL AS VARCHAR(MAX)) = '{item['Business_URL']}'"
+            # self.cursor.execute(check_business_query)
+            # if not self.cursor.fetchone():
+            #     business_insert_query = f"""INSERT INTO business_table_s{shard} (Bussiness_Name, Business_URL, Weekday, OpenH, OpenM,
+            #     OpenAMPM, CloseH, CloseM, CloseAMPM) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+            #     for weekday, hrs in item.get("Business_Hours", {}).items():
+            #         split_hrs = hrs.split("–")
+            #         op, cl = split_hrs if len(split_hrs) == 2 else ["", ""]
+            #         op_h, op_m, op_z = split_time(op)
+            #         cl_h, cl_m, cl_z = split_time(cl)
+            #         business_values = [
+            #             item.get("Bussiness_Name", ""),
+            #             item.get("Business_URL", ""),
+            #             weekday,
+            #             op_h,
+            #             op_m,
+            #             op_z,
+            #             cl_h,
+            #             cl_m,
+            #             cl_z,
+            #         ]
+            #         self.cursor.execute(business_insert_query, business_values)
+            # else:
+            #     pass
 
             self.conn.commit()
         except:
