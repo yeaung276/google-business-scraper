@@ -99,6 +99,7 @@ class GoogleScraperPipeline:
         #         str(item.get("Lon", "")),
         #     ]
         #     self.cursor.execute(insert_query, values)
+        logging.info(f"Inserting {item['Bussiness_Name']} into the database")
         values = [
                 item.get("Keyword", ""),
                 item.get("Bussiness_Name", ""),
