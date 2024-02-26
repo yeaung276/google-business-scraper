@@ -129,7 +129,7 @@ class GoogleBusinessSpider(scrapy.Spider):
                         "keyword": keyword["Keywords"],
                     },
                 )
-    
+
     def parse(self, response, query, page, keyword):
         self.logger.info(
             f'Scraping {query} on page {page}... latency: {response.meta.get("download_latency", None)}'
@@ -340,7 +340,11 @@ class GoogleBusinessSpider(scrapy.Spider):
         else:
             if business["Google_Map_Link"]:
                 yield scrapy.Request(
-                    url=business["Google_Map_Link"],
+                    url=(
+                        "https://" + business["Google_Map_Link"]
+                        if not business["Google_Map_Link"].startswith("https://")
+                        else business["Google_Map_Link"]
+                    ),
                     callback=self.extract_lon_lat,
                     errback=self.error_fallback,
                     cb_kwargs={"business": business},
@@ -372,5 +376,5 @@ class GoogleBusinessSpider(scrapy.Spider):
             return None, None
 
     def error_fallback(self, failure):
-        self.logger.error('error happend')
+        self.logger.error("error happend")
         return failure.request.cb_kwargs.get("business", {})
