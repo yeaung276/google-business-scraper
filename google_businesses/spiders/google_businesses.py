@@ -130,6 +130,9 @@ class GoogleBusinessSpider(scrapy.Spider):
                     },
                 )
 
+    def close_spider(self, spider):
+        self.conn.close()
+    
     def parse(self, response, query, page, keyword):
         self.logger.info(
             f'Scraping {query} on page {page}... latency: {response.meta.get("download_latency", None)}'

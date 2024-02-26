@@ -36,6 +36,9 @@ class GoogleBusinessesPipeline:
         spider.logger.info(
             f"active request: {len(spider.crawler.engine.slot.inprogress)}"
         )
+        spider.logger.info(
+            f"Inserting: {item.get('Bussiness_Name', '')}"
+        )
         formatted_item = {
             "Keyword": item.get("Keyword", ""),
             "Business_Name": item.get("Bussiness_Name", ""),
