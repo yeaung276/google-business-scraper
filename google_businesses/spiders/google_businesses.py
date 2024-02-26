@@ -164,7 +164,7 @@ class GoogleBusinessSpider(scrapy.Spider):
             )
             detail_url = details_url.format(q=quote_plus(query), id=listing_id)
             if f"{Name} {Address}" not in self.scraped_business:
-                self.scraped_business(f"{Name} {Address}")
+                self.scraped_business.append(f"{Name} {Address}")
                 yield scrapy.Request(
                     url=detail_url,
                     callback=self.extract_business_detail,
