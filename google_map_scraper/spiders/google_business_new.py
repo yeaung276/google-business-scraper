@@ -22,8 +22,8 @@ class GoogleSpider(scrapy.Spider):
         'ZYTE_SMARTPROXY_ENABLED': True,
         'ZYTE_SMARTPROXY_URL': 'api.zyte.com:8011',
         'ZYTE_SMARTPROXY_APIKEY': 'bf34ea057aa340bfaf06eb0ecb05cc34',
-        'CONCURRENT_REQUESTS': 16,
-        'CONCURRENT_REQUESTS_PER_DOMAIN': 16,
+        'CONCURRENT_REQUESTS': 1,
+        'CONCURRENT_REQUESTS_PER_DOMAIN': 1,
         'CONCURRENT_ITEMS': 64,
         'AUTOTHROTTLE_ENABLED': True,
         'DOWNLOAD_TIMEOUT': 600,
@@ -194,37 +194,9 @@ class GoogleSpider(scrapy.Spider):
                         },
                     },
                 )
-                
-        # loop two time as a solution to skipped scrapes
-        for location in self.locations:
-            random.shuffle(self.keywords)
-            for keyword in self.keywords:
-                query = self.search_keyword.format(
-                    keyword=keyword["Keywords"], location=location["City"]
-                )
-                url = self.new_listings_url_t.format(q=quote_plus(query), page=0)
-                meta = {
-                    "keyword": keyword["Keywords"],
-                    "start": 0,
-                    "query": query,
-                    "scraped": 0,
-                    "duplicate": 0,
-                }
-                yield Request(
-                    url=url,
-                    callback=self.parse,
-                    headers=self.headers,
-                    meta={
-                        **meta,
-                        "zyte_api_automap": {
-                            "geolocation": "SE",
-                            "responseCookies": True,
-                        },
-                    },
-                )
-
 
     def parse(self, response, *args):
+        logger.info(f'delay: {response.meta.get("download_latency", 0)}')
         fb = len(response.css('div[jscontroller="xkZ6Lb"]'))
         logging.info(
             f"found {fb} businesses for {response.meta['keyword']}, {response.meta['start']}"
