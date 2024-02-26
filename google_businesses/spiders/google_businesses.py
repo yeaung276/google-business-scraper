@@ -129,9 +129,6 @@ class GoogleBusinessSpider(scrapy.Spider):
                         "keyword": keyword["Keywords"],
                     },
                 )
-
-    def close_spider(self, spider):
-        self.conn.close()
     
     def parse(self, response, query, page, keyword):
         self.logger.info(
