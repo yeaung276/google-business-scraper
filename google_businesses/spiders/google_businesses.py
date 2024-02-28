@@ -104,7 +104,7 @@ class GoogleBusinessSpider(scrapy.Spider):
 
     def __init__(self):
         super(GoogleBusinessSpider, self).__init__()
-        with open(f"input/input_keywords.csv", mode="r") as f:
+        with open(f"input/not_in_result.csv", mode="r") as f:
             self.keywords = list(csv.DictReader(f))
 
     def start_requests(self):
@@ -117,6 +117,7 @@ class GoogleBusinessSpider(scrapy.Spider):
                 yield scrapy.Request(
                     url=url,
                     callback=self.parse,
+                    errback=self.retry_keyword_scrape,
                     meta={
                         "zyte_api_automap": {
                             "geolocation": "SE",
@@ -163,15 +164,14 @@ class GoogleBusinessSpider(scrapy.Spider):
                 listing_selector.css("span.hGz87c::text").get("").strip()
             )
             detail_url = details_url.format(q=quote_plus(query), id=listing_id)
-            if f"{Name} {Address}" not in self.scraped_business:
-                self.scraped_business.append(f"{Name} {Address}")
-                yield scrapy.Request(
-                    url=detail_url,
-                    callback=self.extract_business_detail,
-                    cb_kwargs={"business": item, "keyword": keyword},
-                )
-            else:
-                self.logger.info(f"Already scraped {Name} {Address}")
+            
+            self.scraped_business.append(f"{Name} {Address}")
+            yield scrapy.Request(
+                url=detail_url,
+                callback=self.extract_business_detail,
+                cb_kwargs={"business": item, "keyword": keyword},
+            )
+            
 
         # next page
         if response.css('button[aria-label="Next"]'):
@@ -185,9 +185,31 @@ class GoogleBusinessSpider(scrapy.Spider):
             yield scrapy.Request(
                 url=url,
                 callback=self.parse,
+                errback=self.retry_keyword_scrape,
                 meta=meta,
                 cb_kwargs={"query": query, "page": page + 20, "keyword": keyword},
+                
             )
+            
+    def retry_keyword_scrape(self, failure):
+        query = failure.request.cb_kwargs.get("query")
+        page = failure.request.cb_kwargs.get("page")
+        keyword = failure.request.cb_kwargs.get("keyword")
+        self.logger.error(f"Error scraping {keyword} on page {page}, retrying with skipping 1 business...")
+        url = listings_url.format(q=quote_plus(query), page=page + 20)
+        meta = {
+            "zyte_api_automap": {
+                "geolocation": "SE",
+                "responseCookies": True,
+            },
+        }
+        yield scrapy.Request(
+            url=url,
+            callback=self.parse,
+            errback=self.retry_keyword_scrape,
+            meta=meta,
+            cb_kwargs={"query": query, "page": page + 1, "keyword": keyword},
+        )
 
     def extract_business_detail(self, response, business, keyword):
         self.logger.info(

@@ -5,8 +5,10 @@
 
 
 # useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
 import pyodbc
+
+
+table_name = "google_maps_data_not_in_result"
 
 
 class GoogleBusinessesPipeline:
@@ -22,11 +24,11 @@ class GoogleBusinessesPipeline:
 
     def open_spider(self, spider):
         self.cursor.execute("USE google_map_db;")
-        if self.cursor.tables(table=f"google_maps_data", tableType="TABLE").fetchone():
+        if self.cursor.tables(table=table_name, tableType="TABLE").fetchone():
             print("Table exists")
         else:
             self.cursor.execute(
-                f"""CREATE TABLE google_maps_data (Keyword TEXT, Bussiness_Name TEXT, Bussiness_Contact TEXT, 
+                f"""CREATE TABLE {table_name} (Keyword TEXT, Bussiness_Name TEXT, Bussiness_Contact TEXT, 
                 Business_URL TEXT, Bussiness_Website TEXT, Bussiness_Service TEXT,Bussiness_Serving_Area TEXT,Address TEXT,
                 Industry TEXT,Street TEXT,State TEXT,Zipcode TEXT,City TEXT, Country TEXT,Description TEXT,Review_Type TEXT,
                 Google_Map_Link TEXT, Opening_Hours TEXT, About TEXT,Images TEXT,Lat TEXT,Lon TEXT);"""
@@ -35,9 +37,6 @@ class GoogleBusinessesPipeline:
     def process_item(self, item, spider):
         spider.logger.info(
             f"active request: {len(spider.crawler.engine.slot.inprogress)}"
-        )
-        spider.logger.info(
-            f"Inserting: {item.get('Bussiness_Name', '')}"
         )
         formatted_item = {
             "Keyword": item.get("Keyword", ""),
@@ -64,36 +63,46 @@ class GoogleBusinessesPipeline:
             "Lon": str(item.get("Lon", "")),
         }
         try:
-            insert_query = f"""INSERT INTO google_maps_data (Keyword, Bussiness_Name, Bussiness_Contact, Business_URL,
-            Bussiness_Website, Bussiness_Service, Bussiness_Serving_Area, Address, Industry, Street, State, Zipcode, City, Country,
-            Description, Review_Type, Google_Map_Link, Opening_Hours, About, Images, Lat, Lon)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-            values = [
-                item.get("Keyword", ""),
-                item.get("Bussiness_Name", ""),
-                item.get("Bussiness_Contact", ""),
-                item.get("Business_URL", ""),
-                item.get("Bussiness_Website", ""),
-                item.get("Bussiness_Service", ""),
-                item.get("Bussiness_Serving_Area", ""),
-                item.get("Address", ""),
-                item.get("Industry", ""),
-                item.get("Street", ""),
-                item.get("State", ""),
-                item.get("Zipcode", ""),
-                item.get("City", ""),
-                item.get("Country", ""),
-                item.get("Description", ""),
-                item.get("Review_Type", ""),
-                item.get("Google_Map_Link", ""),
-                item.get("Opening Hours", ""),
-                item.get("About", ""),
-                item.get("Images", ""),
-                str(item.get("Lat", "")),
-                str(item.get("Lon", "")),
-            ]
-            self.cursor.execute(insert_query, values)
-            self.conn.commit()
+            check_query = f"SELECT Business_URL FROM {table_name} WHERE CAST(Business_URL AS VARCHAR(MAX)) = '{item['Business_URL']}'"
+            self.cursor.execute(check_query)
+            if not self.cursor.fetchone():
+                spider.logger.info(
+                    f"Inserting: {item.get('Bussiness_Name', '')}"
+                )
+                insert_query = f"""INSERT INTO {table_name} (Keyword, Bussiness_Name, Bussiness_Contact, Business_URL,
+                Bussiness_Website, Bussiness_Service, Bussiness_Serving_Area, Address, Industry, Street, State, Zipcode, City, Country,
+                Description, Review_Type, Google_Map_Link, Opening_Hours, About, Images, Lat, Lon)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                values = [
+                    item.get("Keyword", ""),
+                    item.get("Bussiness_Name", ""),
+                    item.get("Bussiness_Contact", ""),
+                    item.get("Business_URL", ""),
+                    item.get("Bussiness_Website", ""),
+                    item.get("Bussiness_Service", ""),
+                    item.get("Bussiness_Serving_Area", ""),
+                    item.get("Address", ""),
+                    item.get("Industry", ""),
+                    item.get("Street", ""),
+                    item.get("State", ""),
+                    item.get("Zipcode", ""),
+                    item.get("City", ""),
+                    item.get("Country", ""),
+                    item.get("Description", ""),
+                    item.get("Review_Type", ""),
+                    item.get("Google_Map_Link", ""),
+                    item.get("Opening Hours", ""),
+                    item.get("About", ""),
+                    item.get("Images", ""),
+                    str(item.get("Lat", "")),
+                    str(item.get("Lon", "")),
+                ]
+                self.cursor.execute(insert_query, values)
+                self.conn.commit()
+            else:
+                spider.logger.info(
+                    f"Adready exist in db: {item.get('Bussiness_Name', '')}"
+                )
         except Exception as e:
             spider.logger.error(f"Error inserting {item['Bussiness_Name']} into the database", e)
 
